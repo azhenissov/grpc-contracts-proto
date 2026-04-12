@@ -15,5 +15,6 @@ message ProcessPaymentResponse {
 }
 
 service PaymentAPI {
+  //
   rpc ProcessPayment (ProcessPaymentRequest) returns (ProcessPaymentResponse);
 }

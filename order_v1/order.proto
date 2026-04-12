@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package order_v1;
+
+option go_package = "github.com/azhenissov/grpc-contracts-go/order_v1";
+
+message OrderRequest {
+  int64 order_id = 1;
+}
+
+message OrderStatusUpdate {
+  int64 order_id = 1;
+  string status = 2;
+}
+
+service OrderAPI {
+    //
+  rpc SubscribeToOrderUpdates (OrderRequest) returns (stream OrderStatusUpdate);
+}
