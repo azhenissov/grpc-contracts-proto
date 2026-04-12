@@ -1,0 +1,50 @@
+name: Generate Go gRPC code
+
+on:
+  push:
+    branches: [ main, master ] 
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Proto Repo
+        uses: actions/checkout@v3
+        with:
+          path: proto-repo
+
+      - name: Checkout Go Repo
+        uses: actions/checkout@v3
+        with:
+          repository: azhenissov/grpc-contracts-go 
+          token: ${{ secrets.PAT_TOKEN }}
+          path: go-repo
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+
+      - name: Install Protoc & Plugins
+        run: |
+          sudo apt-get update && sudo apt-get install -y protobuf-compiler
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Generate Code
+        run: |
+          mkdir -p go-repo/payment_v1
+          protoc --proto_path=proto-repo/payment_v1 \
+                 --go_out=go-repo/payment_v1 --go_opt=paths=source_relative \
+                 --go-grpc_out=go-repo/payment_v1 --go-grpc_opt=paths=source_relative \
+                 proto-repo/payment_v1/payment.proto
+
+      - name: Push Generated Code to Go Repo
+        run: |
+          cd go-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Auto-generated gRPC code from proto push" || echo "No changes to commit"
+          git push
