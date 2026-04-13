@@ -1,19 +1,62 @@
 syntax = "proto3";
 
-package order_v1;
+package order.v1;
 
 option go_package = "github.com/azhenissov/grpc-contracts-go/order_v1";
 
-message OrderRequest {
-  string order_id = 1;
+// CreateOrderRequest - запрос на создание заказа
+message CreateOrderRequest {
+  string customer_id = 1; // ID клиента
+  string product_id = 2; // ID продукта
+  int32 quantity = 3; // Количество товара
+  int64 total_price = 4; // Общая стоимость в центах
 }
 
+// Order - информация о заказе
+message Order {
+  string id = 1; // Уникальный ID заказа
+  string customer_id = 2; // ID клиента
+  string product_id = 3; // ID продукта
+  int32 quantity = 4; // Количество товара
+  int64 total_price = 5; // Общая стоимость в центах
+  string status = 6; // pending, processing, shipped, delivered, failed
+  string created_at = 7; // Время создания (RFC3339)
+  string updated_at = 8; // Время обновления (RFC3339)
+}
+
+// GetOrderRequest - запрос на получение информации о заказе
+message GetOrderRequest {
+  string order_id = 1; // ID заказа
+}
+
+// CreateOrderResponse - ответ на создание заказа
+message CreateOrderResponse {
+  bool success = 1; // Успешно ли создан заказ
+  Order order = 2; // Информация о созданном заказе
+  string error_message = 3; // Сообщение об ошибке (опционально)
+}
+
+// OrderStatusUpdate - обновление статуса заказа (для streaming)
 message OrderStatusUpdate {
-  string order_id = 1;
-  string status = 2;
+  string order_id = 1; // ID заказа
+  string status = 2; // Новый статус
+  string updated_at = 3; // Время обновления (RFC3339)
+  string message = 4; // Дополнительное сообщение
 }
 
-service OrderAPI {
-    //
-  rpc SubscribeToOrderUpdates (OrderRequest) returns (stream OrderStatusUpdate);
+// OrderSubscriptionRequest - запрос на подписку на обновления заказа
+message OrderSubscriptionRequest {
+  string order_id = 1; // ID заказа для отслеживания
+}
+
+// OrderService - сервис управления заказами
+service OrderService {
+  // CreateOrder - создать новый заказ
+  rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
+  
+  // GetOrder - получить информацию о заказе
+  rpc GetOrder(GetOrderRequest) returns (Order);
+  
+  // SubscribeToOrderUpdates - подписаться на обновления статуса заказа (Server-side Streaming)
+  rpc SubscribeToOrderUpdates(OrderSubscriptionRequest) returns (stream OrderStatusUpdate);
 }
