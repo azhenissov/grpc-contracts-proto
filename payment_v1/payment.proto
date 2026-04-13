@@ -6,7 +6,7 @@ option go_package = "github.com/azhenissov/grpc-contracts-go/payment_v1";
 
 message ProcessPaymentRequest {
   string order_id = 1;
-  double amount = 2;
+  int64 amount = 2;
 }
 
 message ProcessPaymentResponse {
